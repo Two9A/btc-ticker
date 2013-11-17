@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Bitcoin Average Ticker</string>
+    <string name="widget_name">Bitcoin Ticker</string>
+    <string name="widget_header">1 Bitcoin =</string>
+    <string name="loading">Loading...</string>
+    <string name="fetch_url">http://btctarget.com/avg/index/currency/</string>
+    <string name="pref_currency">Show rates for:</string>
+    <string name="pref_save">Save preferences</string>
+    <string name="currency_sel">Pick a currency</string> 
+    <string name="default_currency">USD: US Dollar ($)</string>
+    <string-array name="currency">
+        <item>AUD: Australian Dollar (A$)</item>
+        <item>BRL: Brazilian Real (R$)</item>
+        <item>CAD: Canadian Dollar (C$)</item>
+        <item>CNY: Chinese Yuan (¥)</item>
+        <item>CZK: Czech Koruna (Kč)</item>
+        <item>EUR: Euro (€)</item>
+        <item>GBP: British Pound (£)</item>
+        <item>ILS: Israeli Shekel (₪)</item>
+        <item>JPY: Japanese Yen (¥)</item>
+        <item>NOK: Norwegian Krone (kr)</item>
+        <item>NZD: New Zealand Dollar (NZ$)</item>
+        <item>PLN: Polish Zloty (zł)</item>
+        <item>RUB: Russian Ruble (руб)</item>
+        <item>SEK: Swedish Krona (kr)</item>
+        <item>SGD: Singapore Dollar (S$)</item>
+        <item>USD: US Dollar ($)</item>
+        <item>ZAR: South African Rand (R)</item>
+    </string-array>
+</resources>

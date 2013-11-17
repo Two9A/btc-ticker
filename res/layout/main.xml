@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:orientation="vertical"
+  android:layout_width="fill_parent"
+  android:layout_height="fill_parent">
+    <TextView
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content"
+      android:layout_marginBottom="4dp"
+      android:text="@string/pref_currency" />
+    <Spinner
+      android:id="@+id/currency_sel"
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content"
+      android:layout_marginBottom="12dp"
+      android:entries="@+array/currency"
+      android:prompt="@+string/currency_sel" />
+    <Button
+      android:id="@+id/save_button"
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content"
+      android:text="@string/pref_save" />
+</LinearLayout>
+
