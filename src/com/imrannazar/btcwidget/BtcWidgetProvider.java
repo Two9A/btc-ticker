@@ -6,11 +6,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -19,7 +15,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
@@ -51,19 +46,34 @@ public class BtcWidgetProvider extends AppWidgetProvider {
     public static int GRAPH_WIDTH     = 540;
     public static int GRAPH_HEIGHT    = 160;
 
+    private Handler fetcher = new Handler();
+    private static Context _ctx;
+
+    Runnable fetchRunner = new Runnable() {
+        @Override
+        public void run() {
+            try {
+                createIntent(BtcWidgetProvider.getProviderContext(), PRICE_FETCH).send();
+                fetcher.postDelayed(fetchRunner, REFRESH_TIME);
+            }
+            catch (PendingIntent.CanceledException e) {
+                Log.e(TAG, "Fetch intent cancelled during run", e);
+            }
+        }
+    };
+
+    public static Context getProviderContext() {
+        return BtcWidgetProvider._ctx;
+    }
+
     /**
      * onEnabled: Fired when the first instance of the widget shows up
      */
     @Override
     public void onEnabled(Context ctx) {
         super.onEnabled(ctx);
-
-        Log.i(TAG, "onEnabled");
-        AlarmManager alarm = (AlarmManager)ctx.getSystemService(ctx.ALARM_SERVICE);
-        Calendar cal = Calendar.getInstance();
-        cal.setTimeInMillis(System.currentTimeMillis());
-        cal.add(Calendar.SECOND, 1);
-        alarm.setRepeating(AlarmManager.RTC, cal.getTimeInMillis(), REFRESH_TIME, createIntent(ctx, PRICE_FETCH));
+        BtcWidgetProvider._ctx = ctx;
+        fetchRunner.run();
     }
 
     /**
@@ -73,10 +83,23 @@ public class BtcWidgetProvider extends AppWidgetProvider {
     @Override
     public void onDisabled(Context ctx) {
         super.onDisabled(ctx);
+        fetcher.removeCallbacks(fetchRunner);
+    }
 
-        Log.i(TAG, "onDisabled");
-        AlarmManager alarm = (AlarmManager)ctx.getSystemService(ctx.ALARM_SERVICE);
-        alarm.cancel(createIntent(ctx, PRICE_FETCH));
+    @Override
+    public void onUpdate(Context ctx, AppWidgetManager awManager, int[] awIds) {
+        super.onUpdate(ctx, awManager, awIds);
+
+        for (int awId: awIds) {
+            render(ctx, awManager, awId, ctx.getString(R.string.loading));
+        }
+
+        try {
+            createIntent(ctx, PRICE_FETCH).send();
+        }
+        catch (PendingIntent.CanceledException e) {
+            Log.e(TAG, "Fetch intent cancelled during update", e);
+        }
     }
 
     /**
@@ -90,7 +113,6 @@ public class BtcWidgetProvider extends AppWidgetProvider {
         AppWidgetManager awManager = AppWidgetManager.getInstance(ctx);
 
         if (PRICE_FETCH.equals(intent.getAction())) {
-            Log.i(TAG, "Received FETCH intent");
             ConnectivityManager conn = (ConnectivityManager)ctx.getSystemService(Context.CONNECTIVITY_SERVICE);
             NetworkInfo net = conn.getActiveNetworkInfo();
             SharedPreferences pref = ctx.getSharedPreferences(PREFS_NAME, ctx.MODE_PRIVATE);
@@ -98,8 +120,6 @@ public class BtcWidgetProvider extends AppWidgetProvider {
             ComponentName thisWidget = new ComponentName(ctx.getPackageName(), getClass().getName());
             int awIds[] = awManager.getAppWidgetIds(thisWidget);
             for (int awId: awIds) {
-                Log.i(TAG, "Fetching for "+awId);
-
                 // We were asked to fetch prices; only do that if the network is up
                 if (net != null && net.isConnected()) {
                     String currency = pref.getString("btc_" + awId + "_currency", ctx.getString(R.string.default_currency));
@@ -121,8 +141,6 @@ public class BtcWidgetProvider extends AppWidgetProvider {
         else if (PRICE_RENDER.equals(intent.getAction())) {
             int awId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
             if (awId != AppWidgetManager.INVALID_APPWIDGET_ID) {
-                Log.i(TAG, "Received RENDER intent for "+awId);
-
                 // We were asked (by the network thread) to render the widget given a lump of JSON
                 String msg = "";
                 float last = 0.0f;
@@ -185,8 +203,6 @@ public class BtcWidgetProvider extends AppWidgetProvider {
                 Reader rd;
                 char[] buf = new char[4096];
                 
-                Log.i(TAG, "Fetching "+urls[0]);
-
                 URL url = new URL(urls[0]);
                 HttpURLConnection conn = (HttpURLConnection)url.openConnection();
                 conn.setReadTimeout(10000);
